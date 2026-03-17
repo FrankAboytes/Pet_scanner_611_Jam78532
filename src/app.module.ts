@@ -10,7 +10,7 @@ import { FoundPetsModule } from './found-pets/found-pets.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT, 10) || 5432,
+      port: parseInt(process.env.DB_PORT as string, 10) || 5432,
       username: process.env.DB_USER || 'petuser',
       password: process.env.DB_PASS || 'petpassword',
       database: process.env.DB_NAME || 'petradar_db',

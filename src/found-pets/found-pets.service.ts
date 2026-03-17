@@ -24,9 +24,10 @@ export class FoundPetsService {
     await this.foundPetRepository.save(newFoundPet);
 
     // 2. LA BÚSQUEDA POR RADIO (500 metros)
-    // Usamos query cruda (raw query) como lo pide el examen
     const lostPetsInRange = await this.foundPetRepository.query(`
       SELECT *,
+        ST_X(location::geometry) AS lost_lng,
+        ST_Y(location::geometry) AS lost_lat,
         ST_Distance(
           location,
           ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
@@ -43,9 +44,9 @@ export class FoundPetsService {
 
     // 3. Notificación por Correo
     for (const lostPet of lostPetsInRange) {
-      // Notificamos si la especie coincide (opcional, pero buena práctica)
       if (lostPet.species.toLowerCase() === data.species.toLowerCase()) {
-         await this.mailService.sendMatchNotification(lostPet, newFoundPet);
+         // AQUÍ LE PASAMOS LAS COORDENADAS DIRECTAMENTE DESDE EL 'data'
+         await this.mailService.sendMatchNotification(lostPet, newFoundPet, data.lng, data.lat);
       }
     }
 

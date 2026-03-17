@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Point } from 'geojson';
+import type { Point } from 'geojson';
 
 @Entity('found_pets')
 export class FoundPet {

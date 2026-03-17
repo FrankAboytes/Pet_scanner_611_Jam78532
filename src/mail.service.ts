@@ -3,32 +3,33 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private transporter;
+  
+  async sendMatchNotification(lostPet: any, foundPet: any, foundLng: number, foundLat: number) {
+    // 1. Creamos una cuenta de prueba temporal automáticamente
+    const testAccount = await nodemailer.createTestAccount();
 
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail', // O el servicio que uses
+    // 2. Usamos esa cuenta para enviar el correo
+    const transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: testAccount.user,
+        pass: testAccount.pass,
       },
     });
-  }
 
-  async sendMatchNotification(lostPet: any, foundPet: any) {
-    // Extraer coordenadas (GeoJSON usa [longitud, latitud])
-    const lostLng = lostPet.location.coordinates[0];
-    const lostLat = lostPet.location.coordinates[1];
-    const foundLng = foundPet.location.coordinates[0];
-    const foundLat = foundPet.location.coordinates[1];
+    // 3. Coordenadas de la mascota perdida
+    const lostLng = lostPet.lost_lng;
+    const lostLat = lostPet.lost_lat;
 
-    // Generar mapa estático de Mapbox con dos pines
-    const mapboxToken = process.env.MAPBOX_TOKEN;
+    // 4. Generar mapa de Mapbox (Asegúrate de poner tu token real aquí)
+    const mapboxToken = 'TU_TOKEN_DE_MAPBOX_AQUI'; 
     const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s-a+f00(${lostLng},${lostLat}),pin-s-b+00f(${foundLng},${foundLat})/auto/600x400?access_token=${mapboxToken}`;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: lostPet.owner_email, // O al correo genérico que te pidan
+      from: '"PetRadar System" <petradar@example.com>',
+      to: lostPet.owner_email,
       subject: '¡Posible coincidencia de tu mascota perdida!',
       html: `
         <h2>¡Hola ${lostPet.owner_name}!</h2>
@@ -50,6 +51,13 @@ export class MailService {
       `,
     };
 
-    await this.transporter.sendMail(mailOptions);
+    // 5. Enviamos el correo y obtenemos la URL para verlo
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('-----------------------------------------');
+    console.log('¡MATCH ENCONTRADO EN EL RADIO DE 500M!');
+    console.log('Vista previa del correo enviada a Ethereal:');
+    console.log(nodemailer.getTestMessageUrl(info));
+    console.log('-----------------------------------------');
   }
 }
